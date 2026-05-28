@@ -25,25 +25,38 @@ function App() {
     
     if (token && userData) {
       try {
-        const decoded = JSON.parse(atob(userData));
-        console.log('User data decoded:', decoded);
+        let decoded;
+        try {
+          decoded = JSON.parse(atob(userData));
+        } catch {
+          // fallback for old sessions stored as plain JSON
+          decoded = JSON.parse(userData);
+        }
         setCurrentUser(decoded);
         setIsAuthenticated(true);
         setRole(decoded.role);
       } catch (error) {
-        console.error('Invalid token:', error);
+        console.error('Invalid stored user data, clearing:', error);
         localStorage.removeItem('token');
         localStorage.removeItem('userData');
       }
     }
+
+    // Load waste data from localStorage on mount (shared between compounder and admin)
+    const localEntries = JSON.parse(localStorage.getItem('wasteEntries') || '[]');
+    if (localEntries.length > 0) {
+      setWasteData(localEntries);
+      console.log('Loaded waste entries from localStorage:', localEntries.length);
+    }
   }, []);
 
-  // Fetch waste data when authenticated
+  // Fetch waste data when authenticated, poll every 10s so admin sees live compounder entries
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchWasteData();
-    }
-  }, [isAuthenticated, currentUser]);
+    if (!isAuthenticated) return;
+    fetchWasteData();
+    const interval = setInterval(fetchWasteData, 10000);
+    return () => clearInterval(interval);
+  }, [isAuthenticated]);
 
   const fetchWasteData = async () => {
     try {

@@ -1,15 +1,18 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, Users, Package, AlertTriangle, Activity } from 'lucide-react';
 
 const AdminDashboard = ({ isDarkMode, wasteData }) => {
-  const [stats, setStats] = useState({
-    totalWaste: 0,
-    todayWaste: 0,
-    totalUsers: 0,
-    activeUsers: 0,
-    alertCount: 0
-  });
+  const [userCount, setUserCount] = useState(0);
+
+  useEffect(() => {
+    fetch('http://localhost:5000/api/users', {
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setUserCount(data.data?.length || 0); })
+      .catch(() => {});
+  }, []);
 
   const wasteByType = useMemo(() => {
     const typeCount = {};
@@ -99,10 +102,10 @@ const AdminDashboard = ({ isDarkMode, wasteData }) => {
                 Total Users
               </p>
               <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                24
+                {userCount}
               </p>
               <p className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-500'} mt-1`}>
-                3 new this week
+                Registered users
               </p>
             </div>
             <div className={`w-12 h-12 ${isDarkMode ? 'bg-purple-900' : 'bg-purple-100'} rounded-lg flex items-center justify-center`}>

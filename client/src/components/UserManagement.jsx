@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 
 const UserManagement = ({ isDarkMode }) => {
   const [users, setUsers] = useState([]);
+  const [wasteCounts, setWasteCounts] = useState({});
   const [loading, setLoading] = useState(true);
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -21,30 +22,42 @@ const UserManagement = ({ isDarkMode }) => {
     status: 'active'
   });
 
-  // Fetch users from database
+  // Fetch users and waste counts from database
   useEffect(() => {
-    const fetchUsers = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/users', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
+        const [usersRes, wasteRes] = await Promise.all([
+          fetch('http://localhost:5000/api/users', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+          }),
+          fetch('http://localhost:5000/api/waste?limit=1000', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+          })
+        ]);
+
+        if (usersRes.ok) {
+          const data = await usersRes.json();
           setUsers(data.data || []);
-        } else {
-          console.error('Failed to fetch users');
+        }
+
+        if (wasteRes.ok) {
+          const wasteData = await wasteRes.json();
+          // Count entries per compounder name
+          const counts = {};
+          (wasteData.data || []).forEach(entry => {
+            const name = entry.compounder || 'Unknown';
+            counts[name] = (counts[name] || 0) + 1;
+          });
+          setWasteCounts(counts);
         }
       } catch (error) {
-        console.error('Error fetching users:', error);
+        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUsers();
+    fetchData();
   }, []);
 
   const filteredUsers = useMemo(() => {
@@ -243,6 +256,9 @@ const UserManagement = ({ isDarkMode }) => {
                   Last Active
                 </th>
                 <th className={`text-left py-3 px-4 font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Waste Entries
+                </th>
+                <th className={`text-left py-3 px-4 font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   Actions
                 </th>
               </tr>
@@ -294,7 +310,16 @@ const UserManagement = ({ isDarkMode }) => {
                     {new Date(user.joinDate).toLocaleDateString()}
                   </td>
                   <td className={`py-3 px-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    {user.lastActive}
+                    {user.lastActive ? new Date(user.lastActive).toLocaleString() : '-'}
+                  </td>
+                  <td className={`py-3 px-4`}>
+                    <span className={`inline-flex items-center px-2 py-1 text-xs font-bold rounded-full ${
+                      (wasteCounts[user.name] || 0) > 0
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-gray-100 text-gray-500'
+                    }`}>
+                      {wasteCounts[user.name] || 0} entries
+                    </span>
                   </td>
                   <td className={`py-3 px-4`}>
                     <div className="flex gap-2">

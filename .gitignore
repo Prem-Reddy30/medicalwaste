@@ -43,6 +43,10 @@ models/
 *.pt
 *.pkl
 
+# AI training artifacts
+ai-service/dataset/
+ai-service/runs/
+
 # Temporary files
 *.tmp
 *.temp

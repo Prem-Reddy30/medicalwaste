@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import toast from 'react-hot-toast';
 import AdminAnalytics from './AdminAnalytics';
 import UserManagement from './UserManagement';
 import Reports from './Reports';
@@ -18,59 +17,16 @@ const TestComponent = ({ title, isDarkMode }) => (
 );
 
 const AdminDashboard = ({ isDarkMode, activeTab, setActiveTab, wasteData, setWasteData }) => {
-  // Fetch waste data from backend
-  useEffect(() => {
-    const fetchWasteData = async () => {
-      try {
-        const response = await fetch('http://localhost:5000/api/waste', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          setWasteData(data.data || []);
-        }
-      } catch (error) {
-        console.error('Error fetching waste data:', error);
-      }
-    };
-
-    fetchWasteData();
-    
-    // Set up periodic refresh for real-time updates
-    const interval = setInterval(fetchWasteData, 10000); // Refresh every 10 seconds
-    
-    return () => clearInterval(interval);
-  }, [setWasteData]);
-
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: '📊' },
     { id: 'logs', label: 'Waste Logs', icon: '📝' },
     { id: 'users', label: 'User Management', icon: '👥' },
     { id: 'reports', label: 'Reports', icon: '📊' },
-    { id: 'reports', label: 'Reports', icon: '�' },
     { id: 'settings', label: 'Settings', icon: '⚙️' },
   ];
 
-  const handleTabClick = (tabId) => {
-    console.log('Tab clicked:', tabId);
-    console.log('Previous activeTab:', activeTab);
-    setActiveTab(tabId);
-    console.log('Setting activeTab to:', tabId);
-    toast.success(`Switched to ${tabId} tab`);
-  };
-
   return (
     <div className="space-y-6">
-      {/* Current Tab Display */}
-      <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-purple-50'}`}>
-        <p className={isDarkMode ? 'text-white' : 'text-purple-900'}>
-          <strong>Current Active Tab:</strong> {activeTab}
-        </p>
-      </div>
-
       {/* Tab Content */}
       <motion.div
         key={activeTab}

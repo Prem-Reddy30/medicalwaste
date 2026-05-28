@@ -35,21 +35,42 @@ const DualLogin = ({ onLogin, isDarkMode }) => {
     setIsLoading(true);
 
     try {
-      const compounderUser = {
-        id: 'compounder-user-' + Date.now(),
-        name: compounderData.email.split('@')[0],
-        email: compounderData.email,
-        role: 'compounder',
-        status: 'active'
-      };
+      // Try real login first
+      const response = await fetch('http://localhost:5000/api/users/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: compounderData.email, password: compounderData.password })
+      });
 
-      const compounderToken = 'compounder-token-' + Date.now();
+      if (response.ok) {
+        const data = await response.json();
+        onLogin(data.user, data.token);
+        toast.success('Login successful!');
+      } else {
+        // Auto-register if not found, so demo works easily
+        const regResponse = await fetch('http://localhost:5000/api/users/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: compounderData.email.split('@')[0],
+            email: compounderData.email,
+            password: compounderData.password,
+            role: 'compounder'
+          })
+        });
 
-      onLogin(compounderUser, compounderToken);
-      toast.success('Compounder login successful!');
+        if (regResponse.ok) {
+          const data = await regResponse.json();
+          onLogin(data.user, data.token);
+          toast.success('Account created and logged in!');
+        } else {
+          const err = await regResponse.json();
+          toast.error(err.error || 'Login failed');
+        }
+      }
     } catch (error) {
       console.error('Login error:', error);
-      toast.error('Login failed. Please try again.');
+      toast.error('Cannot connect to server. Is it running?');
     } finally {
       setIsLoading(false);
     }
@@ -60,25 +81,26 @@ const DualLogin = ({ onLogin, isDarkMode }) => {
     setIsLoading(true);
 
     try {
-      if (adminData.email === 'admin@medical.com' && adminData.password === 'admin123') {
-        const adminUser = {
-          id: 'admin-user',
-          name: 'System Administrator',
-          email: 'admin@medical.com',
-          role: 'admin',
-          status: 'active'
-        };
+      const response = await fetch('http://localhost:5000/api/users/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: adminData.email, password: adminData.password })
+      });
 
-        const adminToken = 'admin-token-' + Date.now();
-
-        onLogin(adminUser, adminToken);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.user.role !== 'admin') {
+          toast.error('This account does not have admin access');
+          return;
+        }
+        onLogin(data.user, data.token);
         toast.success('Admin login successful!');
       } else {
         toast.error('Invalid admin credentials');
       }
     } catch (error) {
       console.error('Login error:', error);
-      toast.error('Login failed. Please try again.');
+      toast.error('Cannot connect to server. Is it running?');
     } finally {
       setIsLoading(false);
     }

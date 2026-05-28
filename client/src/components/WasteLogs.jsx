@@ -8,12 +8,15 @@ const WasteLogs = ({ isDarkMode, wasteData, setWasteData }) => {
   const [filterType, setFilterType] = useState('all');
   const [filterSource, setFilterSource] = useState('all');
 
-  // Fetch from localStorage if backend fails
+  // Always fetch from localStorage and combine with backend data
   useEffect(() => {
-    if (wasteData.length === 0) {
-      const localEntries = JSON.parse(localStorage.getItem('wasteEntries') || '[]');
-      if (localEntries.length > 0) {
-        setWasteData(localEntries);
+    const localEntries = JSON.parse(localStorage.getItem('wasteEntries') || '[]');
+    if (localEntries.length > 0) {
+      // Merge local entries with backend data
+      const backendIds = new Set(wasteData.map(item => item._id));
+      const newEntries = localEntries.filter(item => !backendIds.has(item._id));
+      if (newEntries.length > 0) {
+        setWasteData(prev => [...prev, ...newEntries]);
       }
     }
   }, [wasteData, setWasteData]);

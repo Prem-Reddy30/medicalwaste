@@ -135,20 +135,6 @@ router.post('/login', async (req, res) => {
 });
 
 // Get all users (admin only)
-router.get('/', authenticateToken, async (req, res) => {
-  try {
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
-
-    const users = await User.find().select('-password');
-    res.json(users);
-  } catch (error) {
-    console.error('Get users error:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
 // Get all users (admin only)
 router.get('/', authenticateToken, async (req, res) => {
   try {

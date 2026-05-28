@@ -23,9 +23,9 @@ const Sidebar = ({ role, isDarkMode, onTabChange, activeTab }) => {
 
   const adminMenuItems = [
     { icon: Home, label: 'Dashboard', id: 'dashboard' },
-    { icon: BarChart3, label: 'Analytics', id: 'analytics' },
-    { icon: Users, label: 'Compounders', id: 'compounders' },
     { icon: Package, label: 'Waste Logs', id: 'logs' },
+    { icon: Users, label: 'User Management', id: 'users' },
+    { icon: BarChart3, label: 'Reports', id: 'reports' },
     { icon: Settings, label: 'Settings', id: 'settings' },
   ];
 
